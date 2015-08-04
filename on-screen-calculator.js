@@ -16,10 +16,6 @@ function theMain(){
 	var widthOfGrid = widthOfContainer/2;
 	var widthOfSquare = widthOfGrid/3;
 
-	// $container.width(widthOfContainer);
-	// $displayScreen.width(widthOfContainer);
-	// $container.children().width(widthOfGrid);
-
 	// create number grid	
 	for (i = 0; i <= 9; i++){
 		$numberGrid.append('<div class="number">'+ i +'</div>');
@@ -27,8 +23,8 @@ function theMain(){
 
 	// create operations grid
 	var operationsArray = ["+", "-", "*", "/"];
-	for (i = 0; i < operationsArray.length; i++){
-		$operations.append('<div class="operation">'+ operationsArray[i] +'</div>');
+	for (key in operationsArray){	
+		$operations.append('<div class="operation">'+ operationsArray[key] +'</div>');
 	};	
 	// add = and clear buttons to operations grid
 	$operations.append('<div class="equal">=</div>');
@@ -39,13 +35,10 @@ function theMain(){
 		'margin': 'auto',
 		'width': widthOfContainer
 	});
-
 	$('.numberGrid, .operations').css({
 		'display':'inline-block',
 		'width': widthOfGrid
-		// 'float':'left',
 	});
-
 	$displayScreen.css({
 		'display':'inline-block',
 		'width': widthOfContainer,
@@ -53,77 +46,75 @@ function theMain(){
 		'color':'red',
 		'background-color': '#dddddd' 
 	});
-
 	$numberGrid.css({
 		'float':'left',
 	});
 	$operations.css({
 		'float':'right',
 	});
-
 	$('.number, .operation, .equal, .clear').css({
 		'float':'left',
 		'width': widthOfSquare,
 		'height': widthOfSquare,
 		'outline':'1px solid white',
-		// 'margin': 'auto'
-		'text-align':'center'
+		'text-align':'center',
+		'font-size':'2em',
+		'font-weight':'bold',
+		'margin':'5px 5px'
 	});
-
 	$('.number').css({
 		'background-color':'#f31f9b',
 	});
-
 	$('.operation').css({
 		'background-color':'#99f142',
 	});
-
 	$('.clear').css({
 		'background-color':'#3393df',
 	});
+	$('.equal').css({
+		'background-color':'#b678e5',
+	});
 
+	// Declare, Initialize
 	var buttonArray = Array;
 	buttonArray = ["0"];
-	// var operationsArray = Array;
-	// var displayNumber = 0; 
 	var clickedButton = String;
-	// var reset = false;
-	console.log(buttonArray);
 
-	// listen to numbers pressed
+
 	$(".number").on("click",function(){
 		clickedButton = $(this).html();
-		// console.log(buttonArray);
-		if(isAnOperation(buttonArray[buttonArray.length-1])){
+		if (isAnOperation(buttonArray[lastIndex(buttonArray)])){
 			buttonarray = buttonArray.push(clickedButton);
-			$displayScreen.find('input').val(buttonArray[buttonArray.length-1]); // update display
 		}
 		else{
-			if (buttonArray[0] === "0"){
-					buttonArray[0] = clickedButton;			
-			}
-			else{
-				buttonArray[buttonArray.length-1] = buttonArray[buttonArray.length-1] + clickedButton;
-
-			}			
-			$displayScreen.find('input').val(buttonArray[buttonArray.length-1]); // update display
-		}	
-			// displayNumber = $displayScreen.find('input').val() + clickedButton;
-			// console.log(displayNumber);
-			// $displayScreen.find('input').val(displayNumber);
-		// };
+			switch (buttonArray[lastIndex(buttonArray)]){
+				case "0":
+					if (buttonArray.length === 1){
+						buttonArray[0] = clickedButton;	
+					}
+					else{
+						buttonArray[lastIndex(buttonArray)] += clickedButton;
+					}
+					break;
+				case "Infinity":
+					buttonArray = [clickedButton];
+					break; 			
+				default:
+					buttonArray[lastIndex(buttonArray)] += clickedButton;
+			};
+		}
+		updateDisplay(buttonArray[lastIndex(buttonArray)]); // update display	
 		console.log(buttonArray);
 	});
 
 	// user clicks operations 
 	$(".operation").on("click",function(){
 		clickedButton = $(this).html();
-		if(isAnOperation(buttonArray[buttonArray.length-1])){
-			buttonArray[buttonArray.length-1] = clickedButton;
+		if (isAnOperation(buttonArray[lastIndex(buttonArray)])){
+			buttonArray[lastIndex(buttonArray)] = clickedButton;
 		}
 		else{
-			buttonArray = [evaluateAllNumbers(buttonArray)];
-			$displayScreen.find('input').val(buttonArray[buttonArray.length-1]);
+			buttonArray = evaluateAndDisplay(buttonArray);
 			buttonarray = buttonArray.push(clickedButton);
 		}
 		console.log(buttonArray);
@@ -132,10 +123,8 @@ function theMain(){
 	// user clicks =
 	$(".equal").on("click",function(){
 		clickedButton = $(this).html();
-		if(!isAnOperation(buttonArray[buttonArray.length-1])){
-			buttonArray = [evaluateAllNumbers(buttonArray)];
-			$displayScreen.find('input').val(buttonArray[buttonArray.length-1]);
-			// reset = true;
+		if(!isAnOperation(buttonArray[lastIndex(buttonArray)])){
+			buttonArray = evaluateAndDisplay(buttonArray);
 		}
 		console.log(buttonArray);
 	});	
@@ -143,85 +132,38 @@ function theMain(){
 	// user clicks clear
 	$(".clear").on("click",function(){
 		buttonArray = ["0"];
-		$displayScreen.find('input').val(buttonArray[buttonArray.length-1]);
+		updateDisplay(buttonArray[lastIndex(buttonArray)]);
 		console.log(buttonArray);
 	});	
+
+	var evaluateAndDisplay = function(anArray){
+		anArray = [evaluateAllNumbers(anArray)];
+		updateDisplay(anArray[lastIndex(anArray)]);
+		return anArray;
+	};
+
+	var updateDisplay = function(num){
+		$displayScreen.find('input').val(num);
+	};
+
+	var lastIndex = function(anArray){
+		return anArray.length-1;
+	};
 
 	// evaluate all numbers in an array
 	var evaluateAllNumbers = function(anArray){
 		return eval(anArray.join(" ")).toString();
-		// return "10"
 	};
 
 	// check if is an operation (+, -, *, /)
 	var isAnOperation = function(num){
-		switch(num){
-			case "+":
-				return true;
-				break;
-			case "-":
-				return true;
-				break;
-			case "*":
-				return true;
-				break;
-			case "/":
-				return true;
-				break;	
-			default:
-				return false;
+		for (key in operationsArray){
+			if (num === operationsArray[key]){
+				return true;	// num is an operation, break from function
+			};			
 		};
+		return false; 
 	};
-		// buttonArray.append($displayScreen.find('input').val());
-		// operationsArray.append($(this).html());
-
-		// for (key in operationsArray){
-		// 	switch(key){
-		// 		case "=":
-				
-		// 		case "+":
-		// 			var num1 = 
-		// 			add()
-		// 			break;
-		// 		case "-":
-		// 			break;
-		// 		case "*":
-		// 			break;
-		// 		case "/":
-		// 			break;	
-		// 	};
-		// };
-
-
-		// var operationToPerform = 
-
-		// var displayNumber = $displayScreen.find('input').val() + clickedButton;
-		// console.log(displayNumber);
-		// $displayScreen.find('input').val(displayNumber);
-	// });
-
-
-
-
-
-
-
-	// var add = function(num1, num2){
-	// 	return num1 + num2;
-	// };
-	// var subtract = function(num1, num2){
-	// 	return num1 - num2;
-	// };
-	// var multiply = function(num1, num2){
-	// 	return num1*num2;
-	// };
-	// var divide = function(num1, num2){
-	// 	return num1/num2;
-	// };
-
-
-
-
 
 	// warmup problems
 	//
